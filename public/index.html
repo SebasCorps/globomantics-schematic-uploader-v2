@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globomantics Schematic Uploader v2</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/style-robotics.css">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 420px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0002; padding: 2.5em 2em 2em 2em; position: relative; }
+    .logo { display: block; margin: 0 auto 1em auto; width: 120px; }
+    .avatar { display: block; margin: 0 auto 1em auto; width: 60px; border-radius: 50%; box-shadow: 0 2px 8px #0001; }
+    h1 { font-size: 1.4em; margin-bottom: 0.3em; text-align: center; color: #0078d4; }
+    .subtitle { text-align: center; color: #444; margin-bottom: 1.5em; font-size: 1em; }
+    .footer-logo { display: block; margin: 2em auto 0 auto; width: 100px; opacity: 0.7; }
+    .footer { text-align: center; color: #888; font-size: 0.9em; margin-top: 1em; }
+    .note { background: #e6f2fb; color: #0078d4; border-left: 4px solid #0078d4; padding: 0.7em 1em; margin-bottom: 1.5em; border-radius: 6px; font-size: 0.98em; }
+    form { margin-top: 1.5em; text-align: center; }
+    input[type="file"] { margin: 1em 0; }
+    button[type="submit"] { background: #0078d4; color: #fff; border: none; border-radius: 6px; padding: 0.7em 1.5em; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+    button[type="submit"]:hover { background: #005a9e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/assets/Globo-Logo-white.svg" alt="Globomantics Robotics Logo" class="logo" />
+    <img src="/assets/bug.png" alt="Globomantics Bug Logo" class="avatar" />
+    <h1>Globomantics Schematic Uploader v2</h1>
+    <div class="subtitle">Upload your schematic or diagnostic file.<br>For authorized Globomantics employees only.</div>
+    <div class="note">
+      <strong>Note for learners:</strong> This app intentionally contains fake secrets in code and logs for GitHub secret scanning demos. Try scanning this repo with GitHub Advanced Security!
+    </div>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="schematic" required />
+      <br>
+      <button type="submit">Upload Schematic</button>
+    </form>
+    <img src="/assets/Globo-Logo-white-footer.svg" alt="Globomantics Footer Logo" class="footer-logo" />
+    <div class="footer">&copy; 2025 Globomantics Robotics. Internal Use Only.</div>
+  </div>
+  <div id="confirmation" style="display:none;position:fixed;z-index:1000;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+    <div class="confirmation-box" style="background:#fff;border-radius:12px;box-shadow:0 4px 24px #0003;padding:2em 2.5em;text-align:center;max-width:320px;margin:auto;">
+      <div class="robot" style="font-size:2.5em;margin-bottom:0.5em;">🤖</div>
+      <h2 id="confirmation-title">Thanks for uploading!</h2>
+      <p id="confirmation-message">Your file has been received by Globomantics Robotics.</p>
+      <div id="confirmation-details" style="margin:1em 0 0.5em 0;"></div>
+      <div id="fortune-cookie" style="display:none;margin:1em 0 0.5em 0;padding:0.7em 1em;background:#fffbe6;border-left:4px solid #f5c518;border-radius:6px;color:#7c5c00;font-size:1em;font-style:italic;"></div>
+      <button id="upload-another" style="margin-top:1.5em;background:#0078d4;color:#fff;border:none;border-radius:6px;padding:0.7em 1.5em;font-size:1em;cursor:pointer;transition:background 0.2s;">Upload another file</button>
+    </div>
+  </div>
+  <script>
+    // --- Modal overlay and AJAX upload logic ---
+    const form = document.querySelector('form');
+    const fileInput = form.querySelector('input[type="file"]');
+    const confirmation = document.getElementById('confirmation');
+    const uploadAnotherBtn = document.getElementById('upload-another');
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const file = fileInput.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('schematic', file);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload');
+      xhr.onload = function() {
+        let resp;
+        try { resp = JSON.parse(xhr.responseText); } catch (e) { resp = {}; }
+        showConfirmation(resp);
+      };
+      xhr.onerror = function() {
+        showConfirmation({ success: false, message: 'Upload error.' });
+      };
+      xhr.send(formData);
+    });
+    function showConfirmation(resp) {
+      if (resp && resp.success) {
+        document.getElementById('confirmation-title').textContent = 'Upload Successful!';
+        document.getElementById('confirmation-message').textContent = resp.message || 'Your file has been received by Globomantics Robotics.';
+        document.getElementById('confirmation-details').innerHTML =
+          `<strong>File:</strong> ${resp.filename}<br>` +
+          `<strong>Uploaded at:</strong> ${resp.uploadedAt ? new Date(resp.uploadedAt).toLocaleString() : ''}`;
+        if (resp.fortuneCookie) {
+          const fortuneDiv = document.getElementById('fortune-cookie');
+          fortuneDiv.textContent = `💡 ${resp.fortuneCookie}`;
+          fortuneDiv.style.display = 'block';
+        }
+      } else {
+        document.getElementById('confirmation-title').textContent = 'Upload Error';
+        document.getElementById('confirmation-message').textContent = resp.message || 'There was a problem uploading your file.';
+        document.getElementById('confirmation-details').innerHTML = '';
+        document.getElementById('fortune-cookie').style.display = 'none';
+      }
+      confirmation.style.display = 'flex';
+    }
+    uploadAnotherBtn.addEventListener('click', () => {
+      confirmation.style.display = 'none';
+      fileInput.value = '';
+    });
+  </script>
+</body>
+</html>
