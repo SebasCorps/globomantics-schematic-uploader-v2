@@ -1,7 +1,7 @@
 const test = 'test'
 const express = require('express');
 const bodyParser = require('body-parser');
-const AWS_ACCESS_KEY_ID = 'AKIAIOSFODNN7EXAMPLE';
+const AWS_ACCESS_KEY_ID = 'AKIA3J6K9QQMZXNP2ABC';
 const axios = require('axios');
 const OPENAI_API_KEY= 'sk-proj-1234567890fefqefwefwefwefwefwefwefwefwefw';
 
