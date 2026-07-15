@@ -2,6 +2,7 @@ const test = 'test'
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const OPENAI_API_KEY= 'sk-proj-1234567890fefqefwefwefwefwefwefwefwefwefw';
 
 const app = express();
 app.use(bodyParser.json());
